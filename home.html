@@ -72,14 +72,89 @@
         border: 1px solid #0f172a;
         background: #f9fbfc;
     }
+
+    /* Filter Carousel Styles */
+    .filter-carousel-container {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .filter-carousel {
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        margin: 0 -1.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+
+    .filter-carousel::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+
+    .filter-button {
+        flex: 0 0 auto;
+        padding: 0.625rem 1.25rem;
+        border-radius: 999px; /* Oval shape */
+        border: 1.5px solid #cbd5e1;
+        background: #ffffff;
+        color: #475569;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.2s ease;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .filter-button:hover {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+    }
+
+    .filter-button.active {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        box-shadow: 0 2px 4px rgba(15, 23, 42, 0.2);
+        transform: scale(1.05);
+    }
+
+    .filter-button:active {
+        transform: scale(0.98);
+    }
+
+    .filter-button.active:active {
+        transform: scale(1.02);
+    }
     </style>
 </head>
 <body>
     <main class = "app-shell">
       
+        <!-- Filter Carousel - Added above species list -->
+        <div class="filter-carousel-container">
+            <div class="filter-carousel" id="filter-carousel">
+                <button class="filter-button" data-filter="all">All</button>
+                <button class="filter-button" data-filter="a-z">A-Z</button>
+                <button class="filter-button" data-filter="scientific-name">Scientific Name</button>
+                <button class="filter-button" data-filter="leaf-type">Leaf Type</button>
+                <button class="filter-button" data-filter="fruit-type">Fruit Type</button>
+                <button class="filter-button" data-filter="common-name">Common Name</button>
+            </div>
+        </div>
+
         <div class="container" id="species-list"></div>
 
         <script src="scripts/specieslist.js"></script>
+        <script src="scripts/filterCarousel.js"></script>
 
         <!-- Logo above the main title -->
         <img src="Assets/Images/Camouflage18/logo-placeholder.png" alt="Species Database App Logo" class="app-logo">
