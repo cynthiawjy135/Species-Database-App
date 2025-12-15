@@ -109,3 +109,24 @@ if (document.getElementById("species-list")) {
     });
 }
 
+const searchInput = document.getElementById("searchInput");
+
+if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+
+        if (!loadedSpeciesData.length) return;
+
+        if (query === "") {
+            renderSpecies(loadedSpeciesData);
+            return;
+        }
+
+        const filteredData = loadedSpeciesData.filter(species =>
+            species.scientific_name &&
+            species.scientific_name.toLowerCase().includes(query)
+        );
+
+        renderSpecies(filteredData);
+    });
+}
