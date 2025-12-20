@@ -88,7 +88,8 @@
             border-radius: 6px;
         }
 
-    </style>
+
+ </style>
 </head>
 
 <body>
@@ -164,6 +165,16 @@
             document.getElementById("plant-fruit").textContent = species.fruit_type;
             document.getElementById("plant-seed").textContent = species.seed_germination;
         }
+
+        const gallery = document.getElementById("image-gallery");
+
+        gallery.addEventListener("click", (e) => {
+            if (e.target.tagName === "IMG") {
+                const src = e.target.src;
+                console.log("SRC "+src);
+                window.location.href = "imagepreview.html?src=" + encodeURIComponent(src);
+            }
+        });
     </script>
 </body>
 </html>

@@ -12,19 +12,13 @@ async function loadSpeciesImages(scientificName) {
 
         if(imageUrls.length !== 0){
             imageUrls.forEach(url => {
+                
                 const img = document.createElement("img");
                 img.src = url;
                 img.loading = "lazy";
 
                 gallery.appendChild(img);
             });
-            /*
-            if(navigator.serviceWorker.controller){
-                navigator.serviceWorker.controller.postMessage({
-                    type: "CACHE_IMAGES",
-                    images: imageUrls
-                })
-            }*/
         }
         console.log(gallery);
     } catch (e) {

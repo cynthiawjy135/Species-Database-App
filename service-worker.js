@@ -7,8 +7,11 @@ const FILES_TO_CACHE = [
     "/index.html",
     "/home.html",
     "/specie.html",
+    "imagepreview.html",
     "/scripts/specieslist.js",
     "/scripts/imageCache.js",
+    "/scripts/preloadImages.js",
+    "/scripts/filterCarousel.js",
     "/data/images.json"
 ];
 
