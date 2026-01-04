@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import tempfile
 import asyncio
-from uploader import process_file
+from uploader import process_file, translate_to_tetum
 import bcrypt
 from supabase import create_client
 import os
@@ -47,6 +47,32 @@ def upload_species_file():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+async def translateMultipleTexts(texts):
+    tasks = [translate_to_tetum(text) for text in texts]
+    
+    results = await asyncio.gather(*tasks)
+    
+    return results
+
+
+@app.route("/translate", methods=["POST"])
+def translate():
+    print(f"Raw request data: {request.data}")
+    data = request.json
+    texts = data.get('text', [])
+    
+    if not texts:
+        return {"error": "No text provided"}, 400
+    
+    
+    print(f"Received text: '{texts}'")
+    array = asyncio.run(translateMultipleTexts(texts))
+
+    print(f"Translated Text = '{array}")
+    
+    return jsonify(array)
+    
 
 @app.route("/api/users", methods=["POST"])
 def create_user():
