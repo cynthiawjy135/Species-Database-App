@@ -25,3 +25,14 @@ dist-ssr
 
 # Database variables:
 .env.local
+
+
+# .gitignore
+venv/
+env/
+.venv/
+*.pyc
+__pycache__/
+.env
+*.log
+C:\Users\aussc\Documents\Code\Chameleon\Clone2\Species-Database-App\backend\app2.py
