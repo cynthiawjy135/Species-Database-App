@@ -2,13 +2,13 @@ import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef } from '@mui/x-data-grid'
 import Paper from '@mui/material/Paper'
 import { useEffect, useState } from "react"
-import { createClient } from "@supabase/supabase-js"
-
+import { createClient, SupabaseClient } from "@supabase/supabase-js"
+import Box from '@mui/material/Box'
 
 
 console.log("URL = ", import.meta.env.VITE_SUPABASE_URL)
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+//const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
 
 
 
@@ -48,60 +48,84 @@ interface MainTableProps {
 const paginationModel = { page: 0, pageSize: 10 }
 
 
-export default function MainTableSelect({ onRowSelect }: MainTableProps) {
-  const [species, setSpecies] = useState<Species[]>([])
-  useEffect(() => {
-    getSpeciesEN()
-  }, [])
 
-  async function getSpeciesEN() {
-    const { data } = await supabase.from("species_en").select()
-    setSpecies(data ?? [])
+let supabase: SupabaseClient | null = null;
+  try {supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
+  catch (error) {
+    console.error('Failed to initialize Supabase client!!:', error);
   }
 
-  const handleRowSelection = (selectionModel: any) => {
-    console.log("Selection model:", selectionModel)
+export default function MainTableSelect({ onRowSelect }: MainTableProps) {
+  const [supabaseError] = useState(!supabase);
 
-    const selectedIds = Array.from(selectionModel.ids || [])
-    console.log("Selected IDs:", selectedIds)
+  if (supabaseError) {
+    return (
+      <Box sx={{ marginTop: 10}}>
+        <h2 style={{ color: 'red' }}>Critical Error: Database not accessible!</h2>
+      </Box>
+      
+  )
 
-    if (selectedIds.length > 0) {
-      const selectedId = selectedIds[0]
-      console.log("Selected ID:", selectedId)
-      const selectedSpecies = species.find(s => s.species_id === selectedId)
-      console.log("Found species:", selectedSpecies)
-      onRowSelect(selectedSpecies || null)
-    } else {
-      onRowSelect(null)
+  
+  }
+  if (!supabaseError) {
+      
+    const [species, setSpecies] = useState<Species[]>([])
+    useEffect(() => {
+      getSpeciesEN()
+    }, [])
+
+    async function getSpeciesEN() {
+      if (!supabase) { throw new Error('Failed to get rows to display'); }
+      const { data } = await supabase.from("species_en").select()
+      setSpecies(data ?? [])
+    }
+
+    const handleRowSelection = (selectionModel: any) => {
+      console.log("Selection model:", selectionModel)
+
+      const selectedIds = Array.from(selectionModel.ids || [])
+      console.log("Selected IDs:", selectedIds)
+
+      if (selectedIds.length > 0) {
+        const selectedId = selectedIds[0]
+        console.log("Selected ID:", selectedId)
+        const selectedSpecies = species.find(s => s.species_id === selectedId)
+        console.log("Found species:", selectedSpecies)
+        onRowSelect(selectedSpecies || null)
+      } else {
+        onRowSelect(null)
+      }
+
+
+
     }
 
 
 
+    return (
+      <Paper sx={{ height: 600, width: '100%' }}>
+        <DataGrid
+          rows={species}
+          columns={columns}
+          getRowId={(row) => row.species_id}
+          initialState={{ 
+            pagination: { paginationModel },
+            sorting: {
+              sortModel: [{ field: 'species_id', sort: 'asc' }]
+            }
+          }}
+          pageSizeOptions={[10, 20]}
+          checkboxSelection
+          disableMultipleRowSelection
+          onRowSelectionModelChange={handleRowSelection}
+          sx={{ border: 0, backgroundColor: '#cdcdcdff' }}
+        />
+      </Paper>
+    )
   }
 
-
-
-
-  return (
-    <Paper sx={{ height: 600, width: '100%' }}>
-      <DataGrid
-        rows={species}
-        columns={columns}
-        getRowId={(row) => row.species_id}
-        initialState={{ 
-          pagination: { paginationModel },
-          sorting: {
-            sortModel: [{ field: 'species_id', sort: 'asc' }]
-          }
-        }}
-        pageSizeOptions={[10, 20]}
-        checkboxSelection
-        disableMultipleRowSelection
-        onRowSelectionModelChange={handleRowSelection}
-        sx={{ border: 0, backgroundColor: '#cdcdcdff' }}
-      />
-    </Paper>
-  )
 }
+  
 
 export type {Species}

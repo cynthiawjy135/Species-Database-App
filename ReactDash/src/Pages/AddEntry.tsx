@@ -3,17 +3,32 @@ import { TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import React, { useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Alert from '@mui/material/Alert'
 import axios from 'axios';
 
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
-const supabaseTetum = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+
 
 const API_URL = import.meta.env.VITE_API_URL
 
 export default function Page1() {
+    let supabase: SupabaseClient | null = null;
+    let supabaseTetum: SupabaseClient | null = null;
+
+    try {supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
+    catch (error) {
+        console.error('Failed to initialize Supabase client:', error);
+        return null;
+    }
+
+    try {supabaseTetum = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
+    catch (error) {
+        console.error('Failed to initialize Supabase Tetum client:', error);
+        return null;
+    }
+
+  
     //Max char length for english text boxes
     const maxEnglishChar = 2000
     //Max char length for Tetum text. (10% has been added just incase the translation comes back with more characters.)

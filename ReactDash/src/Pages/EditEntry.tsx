@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 import { TextField } from '@mui/material'
 import Alert from '@mui/material/Alert'
 import type { Species } from '../mainTableSelect'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Dialog from '@mui/material/Dialog'
 import DialogActions from '@mui/material/DialogActions'
 import DialogContent from '@mui/material/DialogContent'
@@ -15,7 +15,7 @@ import DialogTitle from '@mui/material/DialogTitle'
 
 
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
+
 
 
 
@@ -85,6 +85,12 @@ const errorContainerSx = {
 
 
 export function EditEntry() {
+    let supabase: SupabaseClient | null = null;
+      try {supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
+      catch (error) {
+        console.error('Failed to initialize Supabase client:', error);
+        return null;
+      }
 
     const [error, setError] = useState('')
     
