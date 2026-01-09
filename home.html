@@ -7,6 +7,7 @@
 
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#fff3ff" />
+    <link rel="stylesheet" href="css/responsive.css">
 
     <link rel="stylesheet" href="css/variables.css" />
     <link rel="stylesheet" href="css/layout.css" />
@@ -18,6 +19,114 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        .lang-modal {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+            position: relative;
+        }
+
+        .lang-choice {
+            padding: 1rem 2rem;
+            width: 100%;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            background: #0B5C37;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .close-overlay {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* -------------------------
+           FILTER OVERLAY (NEW)
+        -------------------------*/
+        .filter-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.55);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+        }
+
+        .filter-modal {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+            position: relative;
+        }
+
+        #filterDescription:empty {
+            display: none;
+        }
+
+        .close-filter-overlay {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            background: #ff4d4d;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .placeholder-option {
+            display: block;
+            width: 100%;
+            padding: 0.8rem;
+            margin-top: 0.6rem;
+            font-size: 1.1rem;
+            background: #0B5C37;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .species-list-card:hover {
+            background-color: #8AC642;
+            color: #0B5C37;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .common-name-species {
+            color:grey;
+            margin: 0;
+        }
+
+        .species-list-card:hover .common-name-species {
+            color:white;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -116,6 +225,29 @@ const filterTitle = document.getElementById("filterTitle");
 const filterOptions = document.getElementById("filterOptions");
 const filterDescription = document.getElementById("filterDescription");
 
+// Global state for active filters
+let activeFilters = {
+    leafType: null,
+    fruitType: null
+};
+
+// Leaf Type options
+const leafTypeOptions = [
+    "Simple",
+    "Pinnately compound (single)",
+    "Pinnately compound (double)",
+    "Pinnately compound (triple)",
+    "Palmately compound"
+];
+
+// Fruit Type options
+const fruitTypeOptions = [
+    "Drupe",
+    "Capsule",
+    "Follicle",
+    "Pod"
+];
+
 const filterConfigs = {
     "a-z": {
         title: "Sort Alphabetically",
@@ -142,6 +274,127 @@ const filterConfigs = {
         ]
     }
 };
+        description: "",
+        options: leafTypeOptions.map(option => ({
+            label: option,
+            value: option,
+            type: "leaf-type"
+        }))
+    },
+    "fruit-type": {
+        title: "Fruit Type",
+        description: "",
+        options: fruitTypeOptions.map(option => ({
+            label: option,
+            value: option,
+            type: "fruit-type"
+        }))
+    }
+}
+
+// Function to apply all active filters and search
+function applyFilters() {
+    if (!loadedSpeciesData || loadedSpeciesData.length === 0) return;
+    
+    let filtered = [...loadedSpeciesData];
+    
+    // Apply leaf type filter
+    if (activeFilters.leafType) {
+        filtered = filtered.filter(species => 
+            species.leaf_type && species.leaf_type === activeFilters.leafType
+        );
+    }
+    
+    // Apply fruit type filter
+    if (activeFilters.fruitType) {
+        filtered = filtered.filter(species => 
+            species.fruit_type && species.fruit_type === activeFilters.fruitType
+        );
+    }
+    
+    // Apply search filter
+    const searchInput = document.getElementById("searchInput");
+    if (searchInput && searchInput.value.trim() !== "") {
+        const query = searchInput.value.toLowerCase().trim();
+        filtered = filtered.filter(species =>
+            species.scientific_name &&
+            species.scientific_name.toLowerCase().includes(query)
+        );
+    }
+    
+    renderSpecies(filtered);
+}
+
+// Make applyFilters available globally
+window.applyFilters = applyFilters;
+
+// Function to update filter button active states
+function updateFilterButtonStates() {
+    const leafTypeBtn = document.querySelector('[data-filter="leaf-type"]');
+    const fruitTypeBtn = document.querySelector('[data-filter="fruit-type"]');
+    
+    if (leafTypeBtn) {
+        if (activeFilters.leafType) {
+            leafTypeBtn.classList.add("active");
+        } else {
+            leafTypeBtn.classList.remove("active");
+        }
+    }
+    
+    if (fruitTypeBtn) {
+        if (activeFilters.fruitType) {
+            fruitTypeBtn.classList.add("active");
+        } else {
+            fruitTypeBtn.classList.remove("active");
+        }
+    }
+}
+
+// Function to create option buttons with active state
+function createOptionButton(option, filterType) {
+    const optionBtn = document.createElement("button");
+    optionBtn.className = "placeholder-option";
+    const optionValue = option.value || option;
+    optionBtn.textContent = option.label || option;
+    
+    // Check if this option is currently active
+    const isActive = (filterType === "leaf-type" && activeFilters.leafType === optionValue) ||
+                     (filterType === "fruit-type" && activeFilters.fruitType === optionValue);
+    
+    if (isActive) {
+        optionBtn.style.background = "#0f172a";
+        optionBtn.style.color = "#ffffff";
+    }
+    
+    optionBtn.onclick = () => {
+        if (filterType === "leaf-type") {
+            // Toggle leaf type filter
+            if (activeFilters.leafType === optionValue) {
+                activeFilters.leafType = null; // Deselect if already selected
+            } else {
+                activeFilters.leafType = optionValue; // Select new option
+            }
+        } else if (filterType === "fruit-type") {
+            // Toggle fruit type filter
+            if (activeFilters.fruitType === optionValue) {
+                activeFilters.fruitType = null; // Deselect if already selected
+            } else {
+                activeFilters.fruitType = optionValue; // Select new option
+            }
+        }
+        
+        // Update filter button states
+        updateFilterButtonStates();
+        
+        // Apply filters
+        applyFilters();
+        
+        // Close overlay
+        filterOverlay.style.display = "none";
+    };
+    
+    return optionBtn;
+}
 
 // Handle Pill Clicks
 document.querySelectorAll(".filter-pill").forEach(btn => {
@@ -160,6 +413,47 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
             return;
         }
 
+        
+        if (key === "all") {
+            // Clear all filters
+            activeFilters.leafType = null;
+            activeFilters.fruitType = null;
+            
+            // Remove active state from all filter buttons except "all"
+            document.querySelectorAll(".filter-button").forEach(b => {
+                if (b.dataset.filter !== "all") {
+                    b.classList.remove("active");
+                }
+            });
+            btn.classList.add("active");
+            
+            // Reset search input
+            const searchInput = document.getElementById("searchInput");
+            if (searchInput) {
+                searchInput.value = "";
+            }
+            
+            // Render all species
+            renderSpecies(loadedSpeciesData);
+            filterOverlay.style.display = "none";
+            return;
+        }
+        
+        // Don't remove active state for leaf-type and fruit-type buttons
+        // They can be active simultaneously
+        // A-Z is a sort, not a filter, so it can work alongside filters
+        if (key === "a-z") {
+            // A-Z can be active alongside leaf-type and fruit-type
+            btn.classList.add("active");
+        } else if (key !== "leaf-type" && key !== "fruit-type") {
+            document.querySelectorAll(".filter-button").forEach(b => {
+                if (b.dataset.filter !== "leaf-type" && b.dataset.filter !== "fruit-type" && b.dataset.filter !== "a-z") {
+                    b.classList.remove("active");
+                }
+            });
+            btn.classList.add("active");
+        }
+        
         const config = filterConfigs[key];
         if(!config) return;
 
@@ -175,6 +469,24 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
                 if (option.action) option.action();
                 filterOverlay.style.display = "none";
             };
+            let optionBtn;
+            
+            if (option.action) {
+                // For A-Z filter with actions
+                optionBtn = document.createElement("button");
+                optionBtn.className = "placeholder-option";
+                optionBtn.textContent = option.label;
+                optionBtn.onclick = () => {
+                    if (option.action) {
+                        option.action();
+                    }
+                    filterOverlay.style.display = "none";
+                };
+            } else {
+                // For leaf-type and fruit-type filters
+                optionBtn = createOptionButton(option, key);
+            }
+            
             filterOptions.appendChild(optionBtn);
         });
 
@@ -183,6 +495,29 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
 });
 
 closeFilterOverlay.addEventListener("click", () => filterOverlay.style.display = "none");
+closeFilterOverlay.addEventListener("click", () => {
+    filterOverlay.style.display = "none";
+});
+
+// Initialize: Set "All" button as active by default when page loads
+document.addEventListener("DOMContentLoaded", () => {
+    const allButton = document.querySelector('[data-filter="all"]');
+    if (allButton) {
+        allButton.classList.add("active");
+    }
+});
+
+let originalOrder = null;
+
+document.addEventListener("DOMContentLoaded", () => {
+    originalOrder = Array.from(document.querySelectorAll(".species-item"));
+});
+
+function resetSpeciesList() {
+    const list = document.getElementById("species-list");
+    if (!originalOrder) return;
+    originalOrder.forEach(item => list.appendChild(item));
+}
 
 // --- SORTING LOGIC ---
 function sortSpecies(direction) {
