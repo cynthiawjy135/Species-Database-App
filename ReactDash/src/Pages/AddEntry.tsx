@@ -11,6 +11,7 @@ import axios from 'axios';
 
 
 const API_URL = import.meta.env.VITE_API_URL
+const API_UPLOAD_URL = import.meta.env.VITE_API_UPLOAD_URL
 
 export default function Page1() {
     let supabase: SupabaseClient | null = null;
@@ -196,139 +197,67 @@ export default function Page1() {
         setStatus('')
         setError('')
 
-        //Upload to english database
-        let rollbackID: string | null = null
         try {
-            const { data: data1, error: error1 } = await supabase
-                .from('species_en')
-                .insert([
-                    { 
-                        scientific_name: formData.scientificName,
-                        common_name: formData.commonName ,
-                        etymology: formData.etymology,
-                        habitat: formData.habitat,
-                        identification_character: formData.identificationCharacteristics,
-                        leaf_type: formData.leafType,
-                        fruit_type: formData.fruitType,
-                        phenology: formData.phenology,
-                        seed_germination: formData.seedGermination,
-                        pest: formData.pests 
-                    }
-                ]).select().single()
+            const response = await fetch(API_UPLOAD_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    scientific_name: formData.scientificName,
+                    common_name: formData.commonName,
+                    etymology: formData.etymology,
+                    habitat: formData.habitat,
+                    identification_character: formData.identificationCharacteristics,
+                    leaf_type: formData.leafType,
+                    fruit_type: formData.fruitType,
+                    phenology: formData.phenology,
+                    seed_germination: formData.seedGermination,
+                    pest: formData.pests,
 
-            if (error1) {
-                console.error('========== English Database Upload Error ==========')
-                console.error('Full error JSON:', JSON.stringify(error, null, 2))
-
-                throw new Error(`DB1 failed: ${error1.message}`);
+                    scientific_name_tetum: formDataTetum.scientificNameTetum,
+                    common_name_tetum: formDataTetum.commonNameTetum,
+                    etymology_tetum: formDataTetum.etymologyTetum,
+                    habitat_tetum: formDataTetum.habitatTetum,
+                    identification_character_tetum: formDataTetum.identificationCharacteristicsTetum,
+                    leaf_type_tetum: formDataTetum.leafTypeTetum,
+                    fruit_type_tetum: formDataTetum.fruitTypeTetum,
+                    phenology_tetum: formDataTetum.phenologyTetum,
+                    seed_germination_tetum: formDataTetum.seedGerminationTetum,
+                    pest_tetum: formDataTetum.pestsTetum,
+                }),
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok){
+                console.log('Success:', data);
+                setLoading(false)
+                setStatus('Upload Successful')
+            } else {
+                setLoading(false)
+                console.log('Failed:', data);
+                setError(`Upload Failed (${data.error})`)
+                console.error('Error:', response.status)
             }
 
-            rollbackID = data1.id
-            console.log("Upload to English database successful")
-
-            const { error: error2 } = await supabaseTetum
-                .from('species_en')
-                .insert([
-                    { 
-                        scientific_name: formDataTetum.scientificNameTetum,
-                        common_name: formDataTetum.commonNameTetum ,
-                        etymology: formDataTetum.etymologyTetum,
-                        habitat: formDataTetum.habitatTetum,
-                        identification_character: formDataTetum.identificationCharacteristicsTetum,
-                        leaf_type: formDataTetum.leafTypeTetum,
-                        fruit_type: formDataTetum.fruitTypeTetum,
-                        phenology: formDataTetum.phenologyTetum,
-                        seed_germination: formDataTetum.seedGerminationTetum,
-                        pest: formDataTetum.pestsTetum 
-                    }
-                ]).select().single()
-
-            if (error2) {
-                console.error('========== English Database Upload Error ==========')
-                console.error('Full error JSON:', JSON.stringify(error, null, 2))
-
-                throw new Error(`DB1 failed: ${error2.message}`);
-            }
-
-            rollbackID = data1.id
-            console.log("Upload to Tetum database successful")
 
 
-
-
-
-
-            setStatus('Uploads to both databases successful!')
-            setError('')
-
-            setFormData({
-                scientificName: '',
-                commonName: '',
-                leafType: '',
-                fruitType: '',
-                etymology: '',
-                habitat: '',
-                identificationCharacteristics: '',
-                phenology: '',
-                seedGermination: '',
-                pests: ''
-            })
-
-            setFormDataTetum({
-                scientificNameTetum: '',
-                commonNameTetum: '',
-                leafTypeTetum: '',
-                fruitTypeTetum: '',
-                etymologyTetum: '',
-                habitatTetum: '',
-                identificationCharacteristicsTetum: '',
-                phenologyTetum: '',
-                seedGerminationTetum: '',
-                pestsTetum: ''
-            })
-
-
-        }
-
-
-        catch (error) {
-            setStatus(`Error: ${(error as Error).message}`)
-            //If english database uploaded and Tetum did not rollback english upload
-            if (rollbackID) {
-                console.log("Trying rollback")
-                try {
-                    const { error: deleteError } = await supabase
-                    .from('species_en')
-                    .delete()
-                    .eq('id', rollbackID)
-
-                    if (deleteError) {
-                        console.error("ERROR! ROLLBACK FAILED!!!!")
-                        setStatus("CRITICAL ERROR, ROLLBACK ON ENGLISH DATABASE FAILED!")
-
-                    }
-                    else {
-                        console.log("Rollback successful")
-                        setStatus("Upload error, upload to english database has been rolled back!")
-                    }
-                }
-                catch (error) {
-                    console.error("ERROR! ROLLBACK FAILED!!!!")
-                    setStatus("CRITICAL ERROR, ROLLBACK ON ENGLISH DATABASE FAILED!")
-                }
-            }
+        } catch (error) {
+            console.error('Error:', error);
+            setError("Error, database upload failed")
         }
 
         finally {
             setLoading(false)
         }
 
-    }
-
+        
 
 
 
     //UI
+    }
     return (
         <Box sx={{ width: '100%', paddingX: 0 }}>
 

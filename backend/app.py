@@ -17,10 +17,19 @@ CORS(app, supports_credentials=True)
 env_file = Path(__file__).parent / '.env.local'
 load_dotenv(dotenv_path=env_file)
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_KEY")
+with open(env_file, 'r') as f:
+    print(f.read())
+
+SUPABASE_URL = os.environ.get("VITE_SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.environ.get("VITE_SUPABASE_PUBLISHABLE_KEY")
+
+SUPABASE_URL_TETUM = os.environ.get("VITE_SUPABASE_URL_TETUM")
+SUPABASE_SERVICE_KEY_TETUM = os.environ.get("VITE_SUPABASE_PUBLISHABLE_KEY_TETUM")
+
+print("Supabase URL:", SUPABASE_URL)
 
 supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+supabase_tetum = create_client(SUPABASE_URL_TETUM, SUPABASE_SERVICE_KEY_TETUM)
 
 """
 This endpoint accepts an Excel or CSV file upload 
@@ -54,6 +63,136 @@ def upload_species_file():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+
+@app.route("/upload", methods=["POST"])
+def upload():
+    print(f"Raw request data: {request.data}")
+    
+    #Get variables from request
+    data = request.json
+    scientific_name = data['scientific_name']
+    common_name = data['common_name']
+    etymology = data['etymology']
+    habitat = data['habitat']
+    identification_character = data['identification_character']
+    leaf_type = data['leaf_type']
+    fruit_type = data['fruit_type']
+    phenology = data['phenology']
+    seed_germination = data['seed_germination']
+    pest = data['pest']
+    
+    #Get tetum variables from request
+    scientific_name_tetum = data['scientific_name_tetum']
+    common_name_tetum = data['common_name_tetum']
+    etymology_tetum = data['etymology_tetum']
+    habitat_tetum = data['habitat_tetum']
+    identification_character_tetum = data['identification_character_tetum']
+    leaf_type_tetum = data['leaf_type_tetum']
+    fruit_type_tetum = data['fruit_type_tetum']
+    phenology_tetum = data['phenology_tetum']
+    seed_germination_tetum = data['seed_germination_tetum']
+    pest_tetum = data['pest_tetum']
+    
+    #Ensure mandatory fields are valid
+    errors = []
+    
+    if not scientific_name or not isinstance(scientific_name, str):
+        errors.append("scientific_name")
+    if not common_name or not isinstance(common_name, str):
+        errors.append("common_name")
+    if not leaf_type or not isinstance(leaf_type, str):
+        errors.append("leaf_type")
+    if not fruit_type or not isinstance(fruit_type, str):
+        errors.append("fruit_type")
+        
+    if not scientific_name_tetum or not isinstance(scientific_name_tetum, str):
+        errors.append("scientific_name_tetum")
+    if not common_name_tetum or not isinstance(common_name_tetum, str):
+        errors.append("common_name_tetum")
+    if not leaf_type_tetum or not isinstance(leaf_type_tetum, str):
+        errors.append("leaf_type_tetum")
+    if not fruit_type_tetum or not isinstance(fruit_type_tetum, str):
+        errors.append("fruit_type_tetum")
+    
+    if errors:
+        e = f"Invalid or missing mandatory field(s). Scientific Name, Common Name, Leaf Type and Fruit type must be a non null string: {', '.join(errors)}"
+        return jsonify({"error": str(e)}), 400
+
+
+    rollback_id = None
+
+    try:
+        print("Starting English Upload")
+        #Insert into English database
+        data1 = supabase.table('species_en').insert({
+            'scientific_name': scientific_name,
+            'common_name': common_name,
+            'etymology': etymology,
+            'habitat': habitat,
+            'identification_character': identification_character,
+            'leaf_type': leaf_type,
+            'fruit_type': fruit_type,
+            'phenology': phenology,
+            'seed_germination': seed_germination,
+            'pest': pest
+        }).execute()
+        
+        print(f"Response data: {data1.data}")
+        print(f"Response type: {type(data1.data)}")
+        
+        if not data1.data:
+            raise Exception('DB1 failed: No data returned')
+        
+        rollback_id = data1.data[0]['species_id']
+        print("Upload to English database successful")
+        
+        # Insert into Tetum database
+        print("Starting Tetum Upload")
+        data2 = supabase_tetum.table('species_en').insert({
+            'scientific_name': scientific_name_tetum,
+            'common_name': common_name_tetum,
+            'etymology': etymology_tetum,
+            'habitat': habitat_tetum,
+            'identification_character': identification_character_tetum,
+            'leaf_type': leaf_type_tetum,
+            'fruit_type': fruit_type_tetum,
+            'phenology': phenology_tetum,
+            'seed_germination': seed_germination_tetum,
+            'pest': pest_tetum
+        }).execute()
+        
+        if not data2.data:
+            raise Exception('DB2 failed: No data returned')
+        
+        print("Upload to Tetum database successful")
+        
+        return jsonify("Created"), 200
+
+    except Exception as e:
+        print('Database Upload Error')
+        print(f'Error: {str(e)}')
+        
+        # Rollback if first upload succeeded but second failed
+        if rollback_id:
+            try:
+                supabase.table('species_en').delete().eq('species_id', rollback_id).execute()
+                print(f"Rolled back record with ID: {rollback_id}")
+                return jsonify({"error": f"English database rolled back: {str(e)}"}), 500
+            except Exception as rollback_error:
+                print(f"Rollback failed: {str(rollback_error)}")
+                return jsonify({"error": f"ROLLBACK ERROR, DATABASES MAY NOT BE IN SYNC {str(e)}"}), 500
+        
+
+
+
+
+
+
+
+
+
     
 async def translateMultipleTexts(texts):
     tasks = [translate_to_tetum(text) for text in texts]
