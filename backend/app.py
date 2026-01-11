@@ -418,7 +418,7 @@ def google_admin_login():
             google_requests.Request(),
             os.getenv("GOOGLE_CLIENT_ID")
         )
-    except Exception as e:
+    except Exception:
         return jsonify({"error": "invalid google token"}), 401
     
     #pulling basic info from google response
@@ -427,11 +427,26 @@ def google_admin_login():
     resp = (
         supabase.table("users")
         .select("user_id, role, is_active")
-        .eq("email", email)
+        .eq("name", email)
+        .limit(1)
+        .execute()
     )
 
+    if not resp.data:
+        return jsonify({"error": "admin account not found"}), 403
     
+    user = resp.data[0]
 
+    if not user["is_active"]:
+        return jsonify({"error": "account disabled"}), 403
+    
+    if user["role"] != "admin":
+        return jsonify({"error": "not an admin account"}), 403
+    
+    return jsonify({
+        "user_id": user["user_id"],
+        "role": user["role"]
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
