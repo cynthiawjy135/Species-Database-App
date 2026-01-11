@@ -2,13 +2,12 @@ import { DataGrid } from '@mui/x-data-grid'
 import type { GridColDef } from '@mui/x-data-grid'
 import Paper from '@mui/material/Paper'
 import { useEffect, useState } from "react"
-import { createClient, SupabaseClient } from "@supabase/supabase-js"
 import Box from '@mui/material/Box'
+import {supabase, supabaseTetum} from './supabaseClient'
 
 
 console.log("URL = ", import.meta.env.VITE_SUPABASE_URL)
 
-//const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
 
 
 
@@ -49,26 +48,16 @@ const paginationModel = { page: 0, pageSize: 10 }
 
 
 
-let supabase: SupabaseClient | null = null;
-  try {supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
-  catch (error) {
-    console.error('Failed to initialize Supabase client!!:', error);
-  }
-
 export default function MainTableSelect({ onRowSelect }: MainTableProps) {
-  const [supabaseError] = useState(!supabase);
+      if (!supabase || !supabaseTetum) {
+        return (
+          <Box sx={{ marginTop: 10}}>
+            <h2 style={{ color: 'red' }}>Critical Error: Database not accessible!</h2>
+          </Box>
+        )
+      }
 
-  if (supabaseError) {
-    return (
-      <Box sx={{ marginTop: 10}}>
-        <h2 style={{ color: 'red' }}>Critical Error: Database not accessible!</h2>
-      </Box>
-      
-  )
-
-  
-  }
-  if (!supabaseError) {
+  if (true) {
       
     const [species, setSpecies] = useState<Species[]>([])
     useEffect(() => {

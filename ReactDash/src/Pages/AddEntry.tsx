@@ -3,10 +3,8 @@ import { TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import React, { useState } from 'react'
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Alert from '@mui/material/Alert'
-import axios from 'axios';
-
+import axios from 'axios'
 
 
 
@@ -14,20 +12,6 @@ const API_URL = import.meta.env.VITE_API_URL
 const API_UPLOAD_URL = import.meta.env.VITE_API_UPLOAD_URL
 
 export default function Page1() {
-    let supabase: SupabaseClient | null = null;
-    let supabaseTetum: SupabaseClient | null = null;
-
-    try {supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
-    catch (error) {
-        console.error('Failed to initialize Supabase client:', error);
-        return null;
-    }
-
-    try {supabaseTetum = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)}
-    catch (error) {
-        console.error('Failed to initialize Supabase Tetum client:', error);
-        return null;
-    }
 
   
     //Max char length for english text boxes
@@ -128,7 +112,7 @@ export default function Page1() {
                 phenologyTetum: translations[7],
                 seedGerminationTetum: translations[8],
                 pestsTetum: translations[9]
-            });
+            })
             
 
 
@@ -226,17 +210,17 @@ export default function Page1() {
                     seed_germination_tetum: formDataTetum.seedGerminationTetum,
                     pest_tetum: formDataTetum.pestsTetum,
                 }),
-            });
+            })
             
-            const data = await response.json();
+            const data = await response.json()
             
             if (response.ok){
-                console.log('Success:', data);
+                console.log('Success:', data)
                 setLoading(false)
                 setStatus('Upload Successful')
             } else {
                 setLoading(false)
-                console.log('Failed:', data);
+                console.log('Failed:', data)
                 setError(`Upload Failed (${data.error})`)
                 console.error('Error:', response.status)
             }
@@ -244,7 +228,7 @@ export default function Page1() {
 
 
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error:', error)
             setError("Error, database upload failed")
         }
 
