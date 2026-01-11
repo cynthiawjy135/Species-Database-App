@@ -58,19 +58,26 @@ def register_media_routes(app, supabase, require_role):
             storage_path = f"{species_id}/{filename}"
 
             with open(temp_path, "rb") as f:
-                supabase.storage.from_("media").upload(
+                resp = supabase.storage.from_("media").upload(
                     storage_path,
                     f,
-                    {"content-type": file.content_type}
+                    file_options={
+                        "content-type": file.content_type,
+                        "upsert": "true"
+                    }
                 )
-            url = supabase.storage.from_("media").get_public_url(storage_path)
+
+                if resp is None:
+                    return jsonify({"error": "storage uploadfailed"}), 500
+            
+            public_url = supabase.storage.from_("media").get_public_url(storage_path)
 
             alt_text = request.form.get("alt_text", "")
             #saving metadata (urls and text not file itself)
             supabase.table("media").insert({
                 "species_id": species_id,
-                "download_link": url,
-                "streaming_link": url,
+                "download_link": public_url,
+                "streaming_link": public_url,
                 "alt_text": alt_text
             }).execute()
 
@@ -84,7 +91,7 @@ def register_media_routes(app, supabase, require_role):
             return jsonify({
                 "status": "success",
                 "message": "media upload successful",
-                "url": url
+                "url": public_url
             }), 200
         
         finally:
