@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from uploader import process_file
 from audit import read_file_to_df, audit_dataframe
-
+from flask_cors import CORS
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
@@ -16,7 +16,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # Flask app
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/')
 def index():
