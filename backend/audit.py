@@ -6,7 +6,7 @@ DB_COLS = [
     "common_name",
     "etymology",
     "habitat",
-    "identification_character",
+    "identification_characters",
     "leaf_type",
     "fruit_type",
     "phenology",
